@@ -1,6 +1,9 @@
 function out = corr_scaled(A,B)
-% correlation function scaled by the mean. used in ﻿van Beijnum et al. Optics Letters, 36, 373 (2011) 
+% correlation function scaled by the mean. used in:
+% van Beijnum et al. Optics Letters, 36, 373 (2011)
+% de Boer et al. PRB, 45, 685 (1992) 
 
-out = sum(sum( (A / mean2(A)) .* (B / mean2(B)) )) / (size(A,1)*size(A,2)) - 1;
+out = mean2( A .* B ) ./ (mean2(A) .* mean2(B)) - 1;
+
 
 end
