@@ -1,11 +1,16 @@
-function [size_grain, size_grain_xy, auto_corr_full] = grain_size(image_array, plot_flag, data_flag)
+function [size_grain, size_grain_xy, auto_corr_full] = grain_size(image_array, plot_flag, data_flag, N_fit)
 % function to get the grain size of an intesity speckle image or array of images
 % BR 09/2019
 
-if nargin < 3
-    data_flag = 0;
-    if nargin < 2
-        plot_flag = 0;
+if nargin < 4
+    flag_fit = 0;
+else 
+     flag_fit = 1;
+    if nargin < 3
+        data_flag = 0;
+        if nargin < 2
+            plot_flag = 0;
+        end
     end
 end
 
@@ -53,12 +58,23 @@ for t_idx = 1:size(image_array,1)
     center_x = floor((size(auto_corr,1)-1)/2 +1);
     center_y = floor((size(auto_corr,2)-1)/2 +1);
     x = (-(size(auto_corr,1)-1)/2):((size(auto_corr,1)-1)/2);
-    y = (-(size(auto_corr,1)-1)/2):((size(auto_corr,1)-1)/2);
+    %y = (-(size(auto_corr,1)-1)/2):((size(auto_corr,1)-1)/2);
+    y = (-(size(auto_corr,2)-1)/2):((size(auto_corr,2)-1)/2);
     
     ftype = fittype('c + b*exp(-x.^2 / (2*a^2))','coefficients',{'a','b','c'});
     fo = fitoptions('Method', 'NonlinearLeastSquares','StartPoint',[3, auto_corr(center_x,center_y), 0]);
-    gfit_x = fit(x', auto_corr(:,center_y),ftype,fo);
-    gfit_y = fit(y', auto_corr(center_x,:)',ftype,fo);
+%     gfit_x = fit(x', auto_corr(:,center_y),ftype,fo);
+%     gfit_y = fit(y', auto_corr(center_x,:)',ftype,fo);
+%     limit = 4;
+%     gfit_x = fit(x(center_x-limit:center_x+limit)', auto_corr(center_x-limit:center_x+limit,center_y),ftype,fo);
+%     gfit_y = fit(y(center_y-limit:center_y+limit)', auto_corr(center_x,center_y-limit:center_y+limit)',ftype,fo);
+    if flag_fit
+        gfit_x = fit(x(center_x-N_fit:center_x+N_fit)', auto_corr(center_x-N_fit:center_x+N_fit,center_y),ftype,fo);
+        gfit_y = fit(y(center_y-N_fit:center_y+N_fit)', auto_corr(center_x,center_y-N_fit:center_y+N_fit)',ftype,fo);
+    else
+        gfit_x = fit(x', auto_corr(:,center_y),ftype,fo);
+        gfit_y = fit(y', auto_corr(center_x,:)',ftype,fo);
+    end
 
     if plot_flag
         figure(72)
@@ -66,7 +82,8 @@ for t_idx = 1:size(image_array,1)
         box on
         hold on
         plot(x,auto_corr(:,center_y), '.-')
-        plot(x,auto_corr(center_x,:), '.-')
+        plot(y,auto_corr(center_x,:), '.-')
+        %plot(x,auto_corr(center_x,:), '.-')
 %         plot(x,auto_corr2(:,center_y), '.')
         plot(gfit_x)
         plot(gfit_y)
@@ -74,8 +91,8 @@ for t_idx = 1:size(image_array,1)
     end
     
     % FWHM from Gauss sigma
-    size_grain_xy(t_idx,1) = 2*sqrt(2*log(2)) * gfit_x.a;
-    size_grain_xy(t_idx,2) = 2*sqrt(2*log(2)) * gfit_y.a;
+    size_grain_xy(t_idx,1) = abs(2*sqrt(2*log(2)) * gfit_x.a);
+    size_grain_xy(t_idx,2) = abs(2*sqrt(2*log(2)) * gfit_y.a);
     size_grain(t_idx) = mean(size_grain_xy(t_idx,:)); 
     
 end
