@@ -21,7 +21,7 @@ end
 
 k = (1:sqrt(n_ccd)) - sqrt(n_ccd)/2 - 1;
 
-rand_TM = randn(n_ccd, n_slm) + 1i * randn(n_ccd, n_slm);
+rand_TM = ( randn(n_ccd, n_slm) + 1i * randn(n_ccd, n_slm) ) / sqrt(2*n_ccd*n_slm);
 
 if smear_param
     
